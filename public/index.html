@@ -1,11 +1,40 @@
 <!doctype html>
 <head>
-
+    <link rel="stylesheet" type="text/css" href="style.css"/>
 </head>
 <body>
     <script src="//code.jquery.com/jquery-2.1.0.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.js"></script>
     <script src="main.js"></script>
-    <p> Hello World </p>
+    <div id="main">
+        <div id="login"> 
+            <div id="enter-username"> Enter username: </div>
+            <div id="username-input"> <input id="username" type="text"> </div>
+            <div id="enter-password"> Enter password: </div>
+            <div id="password-input"> <input id="password" type="text"> </div>
+            <div id="submit-username"> <input type="submit" id="accept" value="Login"> </div>
+            <div id="new-account"> Create a new account: <input type="submit" id="account" value="New Account"> </div>
+        </div>
+        <div id="newuser">
+            <div id="new-username"> Choose a username: </div>
+            <div id="new-user-input"> <input id="new-user" type="text"> </div>
+            <div id="new-password"> Choose a password: </div>
+            <div id="new-password-input"> <input id="new-password" type="text"> </div>
+            <div id="create-user"> <input type="submit" id="signup" value="Create Account"> </div>
+        </div>
+        <div id="stocks">
+            <div id="stocktitle">
+                <ul>
+                    <li class="ticker"> Ticker </li> 
+                    <li class="shares"> Shares </li> 
+                    <li class="newprice">Current Price </li>
+                    <li class="pricediff"> Gain/Loss </li> 
+                    <li class="increase"> % Gain/Loss </li> 
+                    <li class="arrow"> </li> 
+                    <li class="newvalue"> Current Value </li> 
+                </ul> 
+            </div>
+        </div>
+    </div>
 </body>
 </html>
