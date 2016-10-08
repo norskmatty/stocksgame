@@ -115,7 +115,7 @@ $(function() {
         var existingPassword = $('#password').val();
         var item = {'username' : existingUsername, 'password' : existingPassword};
         
-        var ajax = $.ajax('/hidden', {
+        var ajax = $.ajax('/login', {
             type: 'GET',
             data: JSON.stringify(item),
             dataType: 'json',

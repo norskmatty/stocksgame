@@ -8,7 +8,8 @@ var events = require('events');
 var User = require('./models/user-model');
 var bcrypt = require('bcryptjs');
 var passport = require('passport');
-var BasicStrategy = require('passport-http').BasicStrategy;
+//var BasicStrategy = require('passport-http').BasicStrategy;
+var LocalStrategy = require('passport-local').Strategy;
 var http = require('http');
 var session = require('express-session');
 
@@ -28,7 +29,8 @@ app.use(session ({
 var server = http.Server(app);
 var io = socket_io(server);
 
-var strategy = new BasicStrategy(function(username, password, callback) {
+var strategy = new LocalStrategy(function(username, password, callback) {
+    console.log(username);
     User.findOne({
         username: username
     }, function(err, user) {
@@ -36,18 +38,18 @@ var strategy = new BasicStrategy(function(username, password, callback) {
             callback(err);
             return;
         }
-        
+    
         if(!user) {
             return callback(null, false, {
                 message: 'Incorrect username.'  
             });
         }
-        
+    
         user.validatePassword(password, function(err, isValid) {
             if(err) {
                 return callback(err);
             }
-            
+        
             if(!isValid) {
                 return callback(null, false, {
                     message: 'Incorrect password'
@@ -72,41 +74,6 @@ var runServer = function(callback) {
             if (callback) {
                 callback();
             }
-        });
-    
-        
-        User.create({
-            username : "Test",
-            password: "test",
-            stocks: [
-        {
-            "exchange" : "NASDAQ",
-            "ticker" : "SBUX",
-            "price" : "54.10",
-            "shares" : "1000",
-            "moneyspent" : "54100"
-        },
-        {
-            "exchange" : "NASDAQ",
-            "ticker" : "AAPL",
-            "price" : "116.34",
-            "shares" : "500",
-            "moneyspent" : "58170"
-        },
-        {
-            "exchange" : "NYSE",
-            "ticker" : "T",
-            "price" : "40.00",
-            "shares" : "750",
-            "moneyspent" : "30000"
-        },
-        {
-            "exchange" : "NYSE",
-            "ticker" : "SSW",
-            "price" : "13.50",
-            "shares" : "1200",
-            "moneyspent" : "16200"
-        }]
         });
         
     });
@@ -154,10 +121,24 @@ app.get('/users', function(req, res) {
 
 //USER LOGS IN
 
-app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
-    console.log(res.req.username);
-    var sendUser = res.req.user;
-    return res.json(sendUser);
+//app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
+//    console.log(res.req.username);
+//    var sendUser = res.req.user;
+//    return res.json(sendUser);
+//});
+
+//LOCAL STRATEGY USER LOGIN
+
+app.get('/login', function(req, res) {
+    passport.authenticate('local', function(req, res) {
+        console.log(res.req.user);
+        req.logIn(res.req.user, function(err) {
+            if(err) {
+                return res.json({message: "welp"});
+            }
+            return res.json(res.req.user);
+        });
+    });
 });
 
 app.get('/users/:username', function(req, res) {
@@ -347,6 +328,7 @@ app.get('/logout', function(req, res) {
     req.session.destroy();
     res.redirect('/');
 });
+
 
 //UPDATE USING STREAM IO
 
