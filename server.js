@@ -134,12 +134,22 @@ app.get('/login', function(req, res) {
         console.log(res.req.user);
         req.logIn(res.req.user, function(err) {
             if(err) {
-                return res.json({message: "welp"});
+                return res.json({message: "Failed"});
             }
             return res.json(res.req.user);
         });
     });
 });
+
+//app.get('/login', passport.authenticate('local', function(req, res) {
+//    console.log(res.req.user);
+//    req.logIn(res.req.user, function(err) {
+//        if(err) {
+//            return res.json({message: "Failed"});
+//        }
+//        return res.json(res.req.user);
+//    });
+//}));
 
 app.get('/users/:username', function(req, res) {
 
