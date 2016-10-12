@@ -8,7 +8,7 @@ var events = require('events');
 var User = require('./models/user-model');
 var bcrypt = require('bcryptjs');
 var passport = require('passport');
-//var BasicStrategy = require('passport-http').BasicStrategy;
+var BasicStrategy = require('passport-http').BasicStrategy;
 var LocalStrategy = require('passport-local').Strategy;
 var http = require('http');
 var session = require('express-session');
@@ -30,7 +30,6 @@ var server = http.Server(app);
 var io = socket_io(server);
 
 var strategy = new LocalStrategy(function(username, password, callback) {
-    console.log(username);
     User.findOne({
         username: username
     }, function(err, user) {
@@ -62,6 +61,16 @@ var strategy = new LocalStrategy(function(username, password, callback) {
 
 passport.use(strategy);
 app.use(passport.initialize());
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
 
 var runServer = function(callback) {
     mongoose.connect(config.DATABASE_URL, function(err) {
@@ -121,35 +130,29 @@ app.get('/users', function(req, res) {
 
 //USER LOGS IN
 
-//app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
-//    console.log(res.req.username);
-//    var sendUser = res.req.user;
-//    return res.json(sendUser);
-//});
+app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
+    console.log(res.req.username);
+    var sendUser = res.req.user;
+    return res.json(sendUser);
+});
 
 //LOCAL STRATEGY USER LOGIN
 
-app.get('/login', function(req, res) {
-    passport.authenticate('local', function(req, res) {
-        console.log(res.req.user);
-        req.logIn(res.req.user, function(err) {
-            if(err) {
-                return res.json({message: "Failed"});
-            }
-            return res.json(res.req.user);
-        });
-    });
+/**
+ * 1) passport.authenticate('local') should be used as 2nd argument of the function
+ *    app.get(..) so you'd rather have app.get('/login', passport..., function(req, res) { ... })
+ * 
+ * 2) passort.authenticate() will rather not have a callback here - it'll be in the config -
+ *    take a look at the line 32 when you have basic auth strategy - it's actually the same 
+ *    with the local strategy in case of the code architecture
+ */
+app.post('/login', passport.authenticate('local'), function(req, res) {
+    console.log(req.username);
+    var sendUser = req.user;
+    return res.json(sendUser);
 });
 
-//app.get('/login', passport.authenticate('local', function(req, res) {
-//    console.log(res.req.user);
-//    req.logIn(res.req.user, function(err) {
-//        if(err) {
-//            return res.json({message: "Failed"});
-//        }
-//        return res.json(res.req.user);
-//    });
-//}));
+
 
 app.get('/users/:username', function(req, res) {
 
@@ -339,6 +342,153 @@ app.get('/logout', function(req, res) {
     res.redirect('/');
 });
 
+//REMOVE STOCK
+
+app.delete('/remove/:del/:user', function(req, res) {
+    var tempStock = req.params.del;
+    console.log(tempStock);
+    User.update(
+        {username: req.params.user},
+        {
+            $pull: {
+                stocks: {
+                    ticker : tempStock
+                }
+            }
+        },
+        function(err, doc) {
+            if(err) {
+                return console.err(err);
+            }
+            
+            User.find(
+                {username: req.params.user}, function(err, doc) {
+                    if(err) {
+                        return console.err(err);
+                    }
+                    return res.json(doc);
+                });
+        }
+                
+    );
+});
+
+//SELLING PARTIAL STOCK
+
+app.put('/updatedown/:stock/:number/:user', function(req, res) {
+    var tempStock = req.params.stock;
+    var tempNumber = req.params.number;
+    var tempStocks = 0;
+    var tempMoneySpent = 0;
+    
+    User.find(
+        {username: req.params.user}, function(err, doc) {
+            if(err) {
+                return console.log(err);
+            }
+            console.log('doc :' + doc[0]);
+            for (var i=0; i<doc[0].stocks.length;i++) {
+                console.log('the stock is: ' + doc[0].stocks[i].ticker);
+                if(tempStock == doc[0].stocks[i].ticker) {
+                    tempStocks = doc[0].stocks[i].shares - tempNumber;
+                    if(tempStocks < 1) {
+                        return console.err(err);
+                    }
+                    tempMoneySpent = doc[0].stocks[i].price * tempNumber;
+                }
+            }
+            
+            User.update(
+                {username: req.params.user, "stocks.ticker" : tempStock},
+                    {
+                        $set: {
+                            "stocks.$.shares" : tempStocks,
+                            "stocks.$.moneyspent" : tempMoneySpent
+                    }
+                },
+                function(err, doc) {
+                if(err) {
+                    return console.err(err);
+                }
+            
+                User.find(
+                    {username: req.params.user}, function(err, doc) {
+                        if(err) {
+                            return console.err(err);
+                        }
+                        return res.json(doc);
+                    });
+                }
+            );
+        }    
+    );
+});
+
+//BUYING ADDITIONAL SHARES
+
+app.put('/updateup/:stock/:number/:user', function(req, res) {
+    var tempStock = req.params.stock;
+    var tempNumber = req.params.number;
+    var tempStocks = 0;
+    var tempMoneySpent = 0;
+    var tempprice = 0;
+    
+    User.find(
+        {username: req.params.user}, function(err, doc) {
+            if(err) {
+                return console.log(err);
+            }
+            console.log('doc :' + doc[0]);
+            for (var i=0; i<doc[0].stocks.length;i++) {
+                console.log('the stock is: ' + doc[0].stocks[i].ticker);
+                if(tempStock == doc[0].stocks[i].ticker) {
+                    tempStocks = parseInt(doc[0].stocks[i].shares) + parseInt(tempNumber);
+                    if(tempStocks < 1) {
+                        return console.err(err);
+                    }
+                    var query = doc[0].stocks[i].exchange + '%3A' + tempStock;
+                    var originalShares = doc[0].stocks[i].shares;
+                    var originalPrice = doc[0].stocks[i].price;
+                    var searchReq = getFromApi(query);
+    
+                    searchReq.on('end', function(item) {
+                        var stock = item.replace('//', ' ');
+                        stock = stock.trim();
+                        var parsed = JSON.parse(stock);
+                        tempprice = parseInt(parsed[0].l_fix);
+                        console.log('tempprice: ' + tempprice);
+                        tempMoneySpent = parseInt((originalShares * originalPrice) + (tempNumber * tempprice));
+                        console.log('tempMoneySpent: '+ tempMoneySpent);
+                        
+                        User.update(
+                            {username: req.params.user, "stocks.ticker" : tempStock},
+                                {
+                                    $set: {
+                                        "stocks.$.shares" : tempStocks,
+                                        "stocks.$.moneyspent" : tempMoneySpent
+                                    }
+                                },
+                                function(err, doc) {
+                                    if(err) {
+                                        return console.err(err);
+                                    }
+            
+                                User.find(
+                                    {username: req.params.user}, function(err, doc) {
+                                        if(err) {
+                                            return console.err(err);
+                                        }
+                                        return res.json(doc);
+                                });
+                            }
+                        );
+                    });
+                }
+            }
+        }    
+    );
+});
+
 
 //UPDATE USING STREAM IO
 
@@ -389,6 +539,10 @@ io.on('connection', function(socket) {
     socket.on('userData', function(userData) {
         console.log(userData);
     });
+    
+    //socket.on('trash', function() {
+    //    console.log('clicked');
+    //})
 });
 
 

@@ -24,8 +24,22 @@
         <p></p>
         <div id="add-stock">
             Add Stock: <input type="text" id="addstock">
-            Number of shares: <input type="number" id="number-of-shares" min="10" max="1000">
+            Number of shares: <input type="number" id="number-of-shares" min="1" max="1000">
             <input type="submit" id="stockadd" value="Add Stock">
+        </div>
+        <div id="remove-stock">
+            Delete Stock: <input type="text" id="deletestock">
+            <input type="submit" id="trash" value="Delete Stock">
+        </div>
+        <div id="update-stockdown">
+            Stock to sell: <input type="text" id="updatestockdown">
+            Shares to sell: <input type="number" id="share-updatedown-number" min="1" max="1000">
+            <input type="submit" id="stockupdatedown" value="Sell Stock">
+        </div>
+        <div id="update-stockup">
+            Stock to buy: <input type="text" id="updatestockup">
+            Shares to buy: <input type="number" id="share-updateup-number" min="1" max="1000">
+            <input type="submit" id="stockupdateup" value="Buy Stock">
         </div>
         <div id="login"> 
             <div id="enter-username"> Enter username: </div>

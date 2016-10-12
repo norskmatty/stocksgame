@@ -2,6 +2,7 @@ var user = '';
 var userData = {};
 var updatedData = {};
 var totalValue = 0;
+var tempTotalValue = 0;
 var noStocks = false;
 
 function getStockUpdate(callback) {
@@ -17,9 +18,10 @@ function displayStocks(data) {
         var priceDiff = comparePrices(oldPrice, newPrice);
         var percentIncrease = percentageIncrease(priceDiff, oldPrice);
         var money = parseFloat(userData.stocks[i].moneyspent);
-        console.log("Money: " + money);
-        var newValue = parseFloat(getNewValue(percentIncrease, money));
-        totalValue = parseFloat(totalValue + newValue).toFixed(2);
+        var newValue = getNewValue(percentIncrease, money);
+        tempTotalValue += parseFloat(newValue);
+        totalValue = tempTotalValue.toFixed(2);
+        console.log("totalValue: " + totalValue);
         var picture = "";
         var theColor = "";
         if (priceDiff >= 0 ) {
@@ -32,6 +34,7 @@ function displayStocks(data) {
     }
     $('#user-stocks').append('<div id="lastline"> <ul> <li class="ticker"> </li> <li class="shares"> </li> <li class="newprice"> </li> <li class="pricediff"> </li> <li class="increase"> </li> <li class="arrow"> </li> <li class="newvalue"> $' + totalValue + '</li> </ul> </div>');
     totalValue = 0;
+    tempTotalValue = 0;
 }
 
 function comparePrices(oldPrice, newPrice) {
@@ -44,7 +47,7 @@ function percentageIncrease(priceDiff, oldPrice) {
 
 function getNewValue(percentIncrease, money) {
     var convertPercent = percentIncrease / 100;
-    return ((convertPercent * money) + money).toFixed(2);
+    return parseFloat(((convertPercent * money) + money)).toFixed(2);
 }
 
 function getAndDisplayStocks() {
@@ -116,7 +119,7 @@ $(function() {
         var item = {'username' : existingUsername, 'password' : existingPassword};
         
         var ajax = $.ajax('/login', {
-            type: 'GET',
+            type: 'POST',
             data: JSON.stringify(item),
             dataType: 'json',
             contentType: 'application/json'
@@ -191,6 +194,45 @@ $(function() {
     
     $('#get2').click(function() {
         socket.emit('userData', userData);
+    });
+    
+    $('#trash').click(function() {
+        var stockToDelete = $('#deletestock').val();
+        console.log(stockToDelete);
+        var ajax = $.ajax('/remove/' + stockToDelete + '/' + user, {
+            type: 'DELETE',
+            dataType: 'JSON'
+        });
+        ajax.done(function(res){
+            updatedData = res[0];
+            socket.emit('update', updatedData);
+        });
+    });
+    
+    $('#stockupdatedown').click(function() {
+        var stockToUpdate = $('#updatestockdown').val();
+        var updateAmount = parseInt($('#share-updatedown-number').val());
+        var ajax = $.ajax('/updatedown/' + stockToUpdate + '/' + updateAmount + '/' + user, {
+            type: 'PUT',
+            dataType: 'JSON'
+        });
+        ajax.done(function(res) {
+            updatedData = res[0];
+            socket.emit('update', updatedData);
+        });
+    });
+    
+    $('#stockupdateup').click(function() {
+        var stockToUpdate = $('#updatestockup').val();
+        var updateAmount = parseInt($('#share-updateup-number').val());
+        var ajax = $.ajax('/updateup/' + stockToUpdate + '/' + updateAmount + '/' + user, {
+            type: 'PUT',
+            dataType: 'JSON'
+        });
+        ajax.done(function(res) {
+            updatedData = res[0];
+            socket.emit('update', updatedData);
+        });
     });
 });
 
