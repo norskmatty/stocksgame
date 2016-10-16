@@ -40,6 +40,7 @@ var strategy = new LocalStrategy(function(username, password, callback) {
     
         if(!user) {
             return callback(null, false, {
+                response: 'error',
                 message: 'Incorrect username.'  
             });
         }
@@ -51,6 +52,7 @@ var strategy = new LocalStrategy(function(username, password, callback) {
         
             if(!isValid) {
                 return callback(null, false, {
+                    response: 'error',
                     message: 'Incorrect password'
                 });
             }
@@ -116,9 +118,7 @@ app.delete('/users/:name', function(req, res) {
         });
     });
 })
-app.put('/users/:id')
 
-app.get('/users/:id')
 
 app.get('/users', function(req, res) {
     User.find(function(err, users) {
@@ -130,11 +130,19 @@ app.get('/users', function(req, res) {
 
 //USER LOGS IN
 
-app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
-    console.log(res.req.username);
-    var sendUser = res.req.user;
-    return res.json(sendUser);
+/** app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
+    console.log('res.req: ' + res.req);
+    if(res.req.response == 'error') {
+        return res.json(res.req);
+    }
+    else {
+        console.log(res.req.user.username);
+        var sendUser = res.req.user;
+        return res.json(sendUser);
+    }
+    
 });
+**/
 
 //LOCAL STRATEGY USER LOGIN
 
@@ -147,9 +155,14 @@ app.get('/hidden', passport.authenticate('basic', {session: false}), function(re
  *    with the local strategy in case of the code architecture
  */
 app.post('/login', passport.authenticate('local'), function(req, res) {
-    console.log(req.username);
-    var sendUser = req.user;
-    return res.json(sendUser);
+    if(req.response == "error") {
+        return res.json(req);
+    }
+    else {
+        var sendUser = req.user;
+        return res.json(sendUser);
+    }
+    
 });
 
 
@@ -170,12 +183,14 @@ app.get('/users/:username', function(req, res) {
 app.post('/users', function(req, res) {
     if(!req.body) {
         return res.status(400).json({
+            response: 'error',
             message: "no request"
         });
     }
     
     if(!('username' in req.body)) {
         return res.status(422).json({
+            response: 'error',
             message: "Username missing"
         });
     }
@@ -185,6 +200,7 @@ app.post('/users', function(req, res) {
     
     if (typeof username !== 'string') {
         return res.status(422).json({
+            response: 'error',
             message: 'Incorrect username field type'
         });
     }
@@ -193,60 +209,78 @@ app.post('/users', function(req, res) {
     
     if (username === '') {
         return res.status(422).json({
+            response: 'error',
             message: 'Incorrect field length: username'
         });
     }
     
-    if (!('password' in req.body)) {
-        return res.status(422).json({
-            message: 'Password missing'
-        });
-    }
-    
-    var password = req.body.password;
-    console.log(password);
-    
-    if(typeof password !== 'string') {
-        return res.status(422).json({
-            message: 'Incorrect password field type'
-        });
-    }
-    
-    password = password.trim();
-    
-    if(password === '') {
-        return res.status(422).json ({
-            message: 'Incorrect field length: password'
-        });
-    }
-    
-    bcrypt.genSalt(10, function(err, salt) {
-        if (err) {
-            return res.status(500).json({
-                message: 'Internal server error'
+    User.find({username: username}, function(err, doc) {
+        if(err) {
+            return console.err(err);
+        }
+        if(doc.length > 0) {
+            return res.json({
+            response: 'error',
+            message: 'Username already exists'
             });
         }
-        
-        bcrypt.hash(password, salt, function(err, hash) {
-            if(err) {
-                return res.status(500).json({
-                    message: 'Internal server error'
+        else {
+            
+            if (!('password' in req.body)) {
+                return res.status(422).json({
+                    response: 'error',
+                    message: 'Password missing'
                 });
             }
-            
-            User.create({
-                username : username,
-                password : hash
-                }, function(err, user) {
-                    if (err) {
+    
+            var password = req.body.password;
+            console.log(password);
+    
+            if(typeof password !== 'string') {
+                return res.status(422).json({
+                    response: 'error',
+                    message: 'Incorrect password field type'
+                });
+            }
+    
+            password = password.trim();
+    
+            if(password === '') {
+                return res.status(422).json ({
+                    message: 'Incorrect field length: password'
+                });
+            }
+    
+            bcrypt.genSalt(10, function(err, salt) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Internal server error'
+                    });
+                }
+        
+                bcrypt.hash(password, salt, function(err, hash) {
+                    if(err) {
                         return res.status(500).json({
-                            message: 'Internal Server Error'
+                            message: 'Internal server error'
                         });
-                    }
-                    console.log(user);
-                    return res.status(201).json(user);
+                }
+            
+                User.create({
+                    username : username,
+                    password : hash,
+                    money : 100000.00
+                    }, function(err, user) {
+                        if (err) {
+                            return res.status(500).json({
+                                message: 'Internal Server Error'
+                            });
+                        }
+                        console.log(user);
+                        return res.status(201).json(user);
+                    });
+                });
             });
-        });
+        }
     });
 });
 
@@ -254,7 +288,6 @@ app.post('/users', function(req, res) {
 
 var getFromApi = function(args) {
     var emitter = new events.EventEmitter();
-    console.log(args);
     unirest.get('http://finance.google.com/finance/info?client=ig&q=' + args)
         .end(function(res) {
             if (res.ok) {
@@ -287,53 +320,82 @@ var getFromApi = function(args) {
 
 //ADD STOCK API
 
-app.put('/addstock/:exchange/:ticker/:username/:shares', function(req, res) {
-    var query = req.params.exchange + '%3A' + req.params.ticker;
+app.put('/stocks/add', function(req, res) {
+    var query = req.body.exchange + '%3A' + req.body.ticker;
     var searchReq = getFromApi(query);
+    
+    searchReq.on('error', function(item) {
+        return res.json({
+            response: 'error',
+            message: 'Please enter a valid stock ticker for the chosen exchange'
+        });
+    });
     
     searchReq.on('end', function(item) {
         var stock = item.replace('//', ' ');
         stock = stock.trim();
         var parsed = JSON.parse(stock);
-        var tempshares = req.params.shares;
-        console.log(tempshares);
-        var currentusername = req.params.username;
+        var tempshares = req.body.shares;
+        var currentusername = req.body.user;
         var tempticker = parsed[0].t;
         var tempexchange = parsed[0].e;
         var tempprice = parsed[0].l_fix;
-        var moneyspent = tempprice * tempshares;
-        console.log(moneyspent);
-        console.log(parsed[0]);
+        var moneyspent = parseFloat(tempprice * tempshares).toFixed(2);
     
-        User.update(
-            { username: currentusername },
-            {
-                $push: {
-                    stocks: {
-                        ticker : tempticker,
-                        exchange : tempexchange,
-                        price : tempprice,
-                        shares : tempshares,
-                        moneyspent : moneyspent
-                    }
-                }
-            }, 
-            function(err, doc) {
-                if (err) {
-                    return console.err(err);
-                }
-                
-                User.find({username: req.params.username}, function(err, doc) {
-                    if (err) {
-                        return console.err(err);
-                    }
-                    return res.json(parsed[0]);
+        User.find(
+            {username: currentusername}, function(err, doc) {
+            if(err) {
+                return res.json(err);
+            }
+            
+            var moneyHad = parseFloat(doc[0].money);
+            console.log('moneyHad: ' + doc[0].money);
+            var moneyHave = (parseFloat(moneyHad) - parseFloat(moneyspent)).toFixed(2);
+            console.log(moneyHave);
+            if(moneyHave < 0) {
+                return res.json({
+                    response: 'error',
+                    message: 'You do not have enough money to complete this buy'
                 });
             }
-        );
+            else {
+                User.update(
+                    {username: currentusername},
+                        {
+                            $push: {
+                                stocks: {
+                                ticker : tempticker,
+                                exchange : tempexchange,
+                                price : tempprice,
+                                shares : tempshares,
+                                moneyspent : moneyspent
+                                }
+                            },
+                            $set: {
+                                money : moneyHave
+                            }
+                }, 
+                function(err, doc) {
+                    if (err) {
+                        return res.json(err);
+                    }
+                
+                    User.find({username: currentusername}, function(err, doc) {
+                        if (err) {
+                            return console.err(err);
+                        }
+                        return res.json({
+                            response: parsed[0],
+                            money: moneyHave});
+                    });
+                });
+            }
+        });        
+    });        
+});        
+
     
-    });
-});
+
 //LOGOUT 
 
 app.get('/logout', function(req, res) {
@@ -344,11 +406,10 @@ app.get('/logout', function(req, res) {
 
 //REMOVE STOCK
 
-app.delete('/remove/:del/:user', function(req, res) {
-    var tempStock = req.params.del;
-    console.log(tempStock);
+app.delete('/stocks/remove', function(req, res) {
+    var tempStock = req.body.stock;
     User.update(
-        {username: req.params.user},
+        {username: req.body.user},
         {
             $pull: {
                 stocks: {
@@ -362,7 +423,7 @@ app.delete('/remove/:del/:user', function(req, res) {
             }
             
             User.find(
-                {username: req.params.user}, function(err, doc) {
+                {username: req.body.user}, function(err, doc) {
                     if(err) {
                         return console.err(err);
                     }
@@ -375,96 +436,153 @@ app.delete('/remove/:del/:user', function(req, res) {
 
 //SELLING PARTIAL STOCK
 
-app.put('/updatedown/:stock/:number/:user', function(req, res) {
-    var tempStock = req.params.stock;
-    var tempNumber = req.params.number;
+app.put('/stocks/sell', function(req, res) {
+    var tempStock = req.body.stock;
+    var tempNumber = req.body.updateAmount;
     var tempStocks = 0;
     var tempMoneySpent = 0;
+    var tempExchange = '';
     
     User.find(
-        {username: req.params.user}, function(err, doc) {
+        {username: req.body.user}, function(err, doc) {
             if(err) {
                 return console.log(err);
             }
-            console.log('doc :' + doc[0]);
             for (var i=0; i<doc[0].stocks.length;i++) {
                 console.log('the stock is: ' + doc[0].stocks[i].ticker);
                 if(tempStock == doc[0].stocks[i].ticker) {
+                    tempExchange = doc[0].stocks[i].exchange;
                     tempStocks = doc[0].stocks[i].shares - tempNumber;
                     if(tempStocks < 1) {
-                        return console.err(err);
+                        return res.json(err);
                     }
-                    tempMoneySpent = doc[0].stocks[i].price * tempNumber;
+                    tempMoneySpent = doc[0].stocks[i].price * tempStocks;
                 }
             }
             
-            User.update(
-                {username: req.params.user, "stocks.ticker" : tempStock},
-                    {
-                        $set: {
-                            "stocks.$.shares" : tempStocks,
-                            "stocks.$.moneyspent" : tempMoneySpent
-                    }
-                },
-                function(err, doc) {
-                if(err) {
-                    return console.err(err);
-                }
+            var query = tempExchange + '%3A' + tempStock;
+            var searchReq = getFromApi(query);
+    
+    
+            searchReq.on('end', function(item) {
+                var stock = item.replace('//', ' ');
+                stock = stock.trim();
+                var parsed = JSON.parse(stock);
+                var newPrice = parsed[0].l_fix;
+                var moneyObtained = (parseFloat(newPrice) * parseFloat(tempNumber)).toFixed(2);
+                var newMoney = (parseFloat(doc[0].money) + parseFloat(moneyObtained)).toFixed(2);
+                console.log('newMoney on sell: ' + newMoney);
             
-                User.find(
-                    {username: req.params.user}, function(err, doc) {
-                        if(err) {
-                            return console.err(err);
+                User.update(
+                    {username: req.body.user, "stocks.ticker" : tempStock},
+                        {
+                            $set: {
+                                money: newMoney,
+                                "stocks.$.shares" : tempStocks,
+                                "stocks.$.moneyspent" : tempMoneySpent
                         }
-                        return res.json(doc);
-                    });
-                }
-            );
+                    },
+                    function(err, doc) {
+                    if(err) {
+                        return console.err(err);
+                    }
+            
+                    User.find(
+                        {username: req.body.user}, function(err, doc) {
+                            tempStocks = 0;
+                            tempMoneySpent = 0;
+                            tempNumber = 0;
+                            tempStocks = '';
+                            query = '';
+                            if(err) {
+                                return console.err(err);
+                            }
+                            return res.json(doc);
+                        });
+                    }
+                );
+            });
         }    
     );
 });
 
 //BUYING ADDITIONAL SHARES
 
-app.put('/updateup/:stock/:number/:user', function(req, res) {
-    var tempStock = req.params.stock;
-    var tempNumber = req.params.number;
+/**
+ 
+    app.get('/shares/')
+    app.get('/shares/:id')
+    app.delete('/shares/:id')
+    app.post('/shares', function(req, res) {})
+    app.put('/shares/:id', function(req, res) {})
+
+*/
+
+app.put('/stocks/buy', function(req, res) {
+    if(!('stock' in req.body)) {
+        return res.json({
+            response: 'error',
+            message: 'No stock entered'
+        });
+    }
+    
+    if(!('updateAmount' in req.body)) {
+        return res.json({
+            response: 'error',
+            message: 'Please enter number of stocks to buy'
+        });
+    }
+    
+    var tempStock = req.body.stock;
+    var tempNumber = req.body.updateAmount;
     var tempStocks = 0;
     var tempMoneySpent = 0;
     var tempprice = 0;
+    var originalMoneySpent = 0;
+    var tempNewMoneySpent = 0;
+    var currentuser = req.body.user;
+    var newCostAveragedPrice = 0;
+    var newMoney = 0;
     
     User.find(
-        {username: req.params.user}, function(err, doc) {
+        {username: currentuser}, function(err, doc) {
             if(err) {
                 return console.log(err);
             }
-            console.log('doc :' + doc[0]);
             for (var i=0; i<doc[0].stocks.length;i++) {
-                console.log('the stock is: ' + doc[0].stocks[i].ticker);
                 if(tempStock == doc[0].stocks[i].ticker) {
                     tempStocks = parseInt(doc[0].stocks[i].shares) + parseInt(tempNumber);
                     if(tempStocks < 1) {
                         return console.err(err);
                     }
                     var query = doc[0].stocks[i].exchange + '%3A' + tempStock;
-                    var originalShares = doc[0].stocks[i].shares;
-                    var originalPrice = doc[0].stocks[i].price;
+                    originalMoneySpent = parseFloat(doc[0].stocks[i].moneyspent);
                     var searchReq = getFromApi(query);
     
                     searchReq.on('end', function(item) {
                         var stock = item.replace('//', ' ');
                         stock = stock.trim();
                         var parsed = JSON.parse(stock);
-                        tempprice = parseInt(parsed[0].l_fix);
-                        console.log('tempprice: ' + tempprice);
-                        tempMoneySpent = parseInt((originalShares * originalPrice) + (tempNumber * tempprice));
-                        console.log('tempMoneySpent: '+ tempMoneySpent);
+                        tempprice = parsed[0].l_fix;
+                        tempNewMoneySpent = parseFloat(tempNumber * tempprice).toFixed(2);
+                        tempMoneySpent = (parseFloat(originalMoneySpent) + parseFloat(tempNewMoneySpent)).toFixed(2);
+                        newCostAveragedPrice = (parseFloat(tempMoneySpent) / parseFloat(tempStocks)).toFixed(2);
+                        newMoney = (parseFloat(doc[0].money) - parseFloat(tempNewMoneySpent)).toFixed(2);
+                        console.log('newMoney on buy: ' + newMoney);
+                        if(newMoney < 0) {
+                            return res.json ({
+                                response: 'error',
+                                message: 'You do not have enough money to buy these shares'
+                            });
+                        }
                         
                         User.update(
-                            {username: req.params.user, "stocks.ticker" : tempStock},
+                            {username: currentuser, "stocks.ticker" : tempStock},
                                 {
                                     $set: {
+                                        money : newMoney,
                                         "stocks.$.shares" : tempStocks,
+                                        "stocks.$.price" : newCostAveragedPrice,
                                         "stocks.$.moneyspent" : tempMoneySpent
                                     }
                                 },
@@ -474,11 +592,13 @@ app.put('/updateup/:stock/:number/:user', function(req, res) {
                                     }
             
                                 User.find(
-                                    {username: req.params.user}, function(err, doc) {
+                                    {username: currentuser}, function(err, doc) {
                                         if(err) {
                                             return console.err(err);
                                         }
+                                        query = '';
                                         return res.json(doc);
+                                        
                                 });
                             }
                         );
@@ -524,10 +644,8 @@ io.on('connection', function(socket) {
                 if (err) {
                     return console.err(err);
                 }
-                console.log(doc);
                 socket.emit('returnUpdate', trimmed, doc);
             });
-            console.log(trimmed);
         });
     
         searchReq.on('error', function(code) {
@@ -539,6 +657,7 @@ io.on('connection', function(socket) {
     socket.on('userData', function(userData) {
         console.log(userData);
     });
+    
     
     //socket.on('trash', function() {
     //    console.log('clicked');

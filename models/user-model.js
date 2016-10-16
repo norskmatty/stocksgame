@@ -9,6 +9,10 @@ var UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    money: {
+        type: String,
+        required: true
+    },
     stocks: {
         type: Array,
         required: false

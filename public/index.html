@@ -7,68 +7,89 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.3.0/handlebars.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="main.js"></script>
+    <nav id="header">
+        <div id="content">
+            <h3> STOCKS GAME </h3>
+            <ul id="nav-open">
+                <li id="click-to-login"> Login </li>
+                <li id="click-to-create-account"> Create Account </li>
+            </ul>
+            <ul id="nav-logged-in">
+                <li id="update-stocks"> Update </li>
+                <li id="click-to-add-stock"> Add Stock </li>
+                <li id="click-to-logout"> Logout </li>
+            </ul>
+        </div>
+    </nav>
     <div id="main">
-        <div id="temp">
+<!--        <div id="temp">
             <input type="submit" id="getUsers" value="Console list users">
         </div>
-        <div id="temp-del">
+     <div id="temp-del">
             <input id="delete-user" type="text">
             <input type="submit" id="del" value="Delete User">
         </div>
-        <div id ="temp-update">
-            <input type="submit" id="update" value="Update Stocks">
-        </div>
-        <div id = "get">
-            <input type="submit" id="get2" value="server console.log userData">
-        </div>
-        <p></p>
-        <div id="add-stock">
-            Add Stock: <input type="text" id="addstock">
-            Number of shares: <input type="number" id="number-of-shares" min="1" max="1000">
-            <input type="submit" id="stockadd" value="Add Stock">
-        </div>
-        <div id="remove-stock">
-            Delete Stock: <input type="text" id="deletestock">
-            <input type="submit" id="trash" value="Delete Stock">
-        </div>
-        <div id="update-stockdown">
-            Stock to sell: <input type="text" id="updatestockdown">
-            Shares to sell: <input type="number" id="share-updatedown-number" min="1" max="1000">
-            <input type="submit" id="stockupdatedown" value="Sell Stock">
-        </div>
-        <div id="update-stockup">
-            Stock to buy: <input type="text" id="updatestockup">
-            Shares to buy: <input type="number" id="share-updateup-number" min="1" max="1000">
-            <input type="submit" id="stockupdateup" value="Buy Stock">
-        </div>
+-->
         <div id="login"> 
-            <div id="enter-username"> Enter username: </div>
-            <div id="username-input"> <input id="username" type="text"> </div>
-            <div id="enter-password"> Enter password: </div>
-            <div id="password-input"> <input id="password" type="text"> </div>
+            <h2> Welcome back!  Please login below </h2>
+            <h3> Username </h3> 
+            <input id="username" type="text"> 
+            <h3> Password </h3> 
+            <input id="password" type="text">
             <div id="submit-username"> <input type="submit" id="accept" value="Login"> </div>
-            <div id="new-account"> Create a new account: <input type="submit" id="account" value="New Account"> </div>
         </div>
         <div id="newuser">
-            <div id="new-username"> Choose a username: </div>
-            <div id="new-user-input"> <input id="new-user" type="text"> </div>
-            <div id="new-password"> Choose a password: </div>
-            <div id="new-password-input"> <input id="new-pass" type="text"> </div>
+            <h2> Create your new account </h2>
+            <h3> Username </h3>
+            <input id="new-user" type="text">
+            <h3> Password </h3>
+            <input id="new-pass" type="text">
             <div id="create-user"> <input type="submit" id="signup" value="Create Account"> </div>
         </div>
+        <div id="add-stock">
+            <h2> Add a new stock to your portfolio </h2>
+            <h3> Exchange: </h3> <select name="exchanges" id="exchanges">
+                <option value="NYSE">NYSE</option>
+                <option value="NASDAQ">NASDAQ</option>
+            </select>
+            <h3> Ticker </h3>
+            <input type="text" id="addstock">
+            <h3> Number of shares </h3>
+            <input type="number" id="number-of-shares" min="1" max="1000">
+            <div id="add-a-stock"> <input type="submit" id="stockadd" value="Add Stock"> </div>
+            <div id="add-stock-cancel"> <input type="submit" id="stock-add-cancel" value="Cancel"> </div>
+        </div>
+        <div id="buy-stocks-screen"> 
+            <h2> Buy additional shares of this stock </h2>
+            <div id="stock-to-buy"> 
+            </div>
+            <h3> Shares to buy </h3>
+            <input type="number" id="share-updateup-number" min="1" max="1000">
+            <div> <input type="submit" id="stockupdateup" value="Buy Stock"> </div>
+        </div>
+        <div id="sell-stocks-screen">
+            <h2> Sell a partial amount of shares of this stock </h2>
+            <div id="stock-to-sell">
+            </div>
+            <h3> Shares to sell </h3>
+            <input type="number" id="share-updatedown-number" min="1" max="1000">
+            <div> <input type="submit" id="stockupdatedown" value="Sell Stock"> </div>
+        </div>
         <div id="stocks">
-            <div id="logout">
-                <div id="lougout-button"> <input type="submit" id="logout-click" value="Logout"> </div>
+            <div id="total-money">
+                Cash: <span="insert-money"> </span> 
             </div>
             <div id="stocktitle">
-                <ul>
+                <ul class="stocks-list">
                     <li class="ticker"> Ticker </li> 
                     <li class="shares"> Shares </li> 
-                    <li class="newprice">Current Price </li>
-                    <li class="pricediff"> Gain/Loss </li> 
-                    <li class="increase"> % Gain/Loss </li> 
-                    <li class="arrow"> </li> 
-                    <li class="newvalue"> Current Value </li> 
+                    <li class="oldprice"> OPrice </li>
+                    <li class="newprice"> CPrice </li>
+                    <li class="pricediff"> Diff </li> 
+                    <li class="increase"> %Diff </li> 
+                    <li class="arrow"> </li>
+                    <li class="oldvalue"> OValue </li>
+                    <li class="newvalue"> CValue </li> 
                 </ul> 
             </div>
         </div>

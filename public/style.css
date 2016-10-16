@@ -4,54 +4,177 @@
     margin: 0;
 }
 
-li {
+#main {
+    width: 1000px;
+    margin: 0 auto;
+}
+
+#header {
+    height: 100px;
+    background-color: black;
+    color: white;
+}
+
+#content {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#content h3 {
+    font-size: 30px;
+    padding-top: 35px;
+    padding-left: 5px;
+}
+
+#nav-logged-in {
+    display: none;
+}
+
+#nav-open, #nav-logged-in {
+    height: 20px;
+    font-size: 18px;
+    padding-right: 5px;
+    float: right;
+    margin-top: -25px;
+}
+
+#nav-open li, #nav-logged-in li {
     display: inline-block;
-    width: 75px;
+    text-align: right;
+    padding: 15px;
+}
+
+#nav-open li:hover, #nav-logged-in li:hover {
+    color: lightblue;
+    cursor: pointer;
 }
 
 img {
     height: 14px;
 }
 
-#login, #newuser {
+#total-money {
+    background-color: aliceblue;
+    font-size: 20px;
+    height: 75px;
+    display: none;
+    text-align: center;
+    padding-top: 27.5px;
+}
+
+#insert-money {
+    font-size: 24px;
+    color: darkgreen;
+}
+
+#login, #newuser, #buy-stocks-screen, #sell-stocks-screen, #add-stock {
     height: 500px;
-    width: 500px;
+    width: 750px;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 200px;
-    background-color: black;
+    margin-top: 10px;
+    display: none;
+}
+
+#login h2, #newuser h2, #add-stock h2, #buy-stocks-screen h2, #sell-stocks-screen h2 {
+    text-align: left;
+    font-size: 24px;
+    margin-bottom: 50px;
+}
+
+#login h3, #newuser h3, #add-stock h3, #buy-stocks-screen h3, #sell-stocks-screen h3 {
+    font-size: 16px;
+    margin-left: 30px;
+    margin-bottom: 5px;
+}
+
+#stock-to-buy, #stock-to-sell {
+    margin-left: 30px;
+    color: blue;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+#username, #password, #new-user, #new-pass, #addstock, #number-of-shares, #share-updateup-number, #share-updatedown-number {
+    background-color: transparent;
+	box-shadow: none;
+	border: 0;
+	border-bottom: solid 2px black;
+	margin-bottom: 20px;
+	font-size: 20px;
+	margin-left: 30px;
+}
+
+#accept, #signup, #stockadd, #stock-add-cancel, #stockupdateup, #stockupdatedown {
+    margin-left: 30px;
+    margin-top: 10px;
+    background-color: white;
+    color: black;
+    border: 0;
+    font-size: 18px;
+    padding: 5px;
+    border: solid black 1px;
+}
+
+#accept:hover, #signup:hover, #stockadd:hover, #stock-add-cancel:hover, #stockupdateup:hover, #stockupdatedown:hover {
+    cursor: pointer;
+    background: black;
     color: white;
 }
 
-#newuser {
+#add-stock {
+    margin: 0 auto;
     display: none;
+    width: 750px;
+}
+
+select {
+    font-size: 16px;
+    margin-bottom: 20px;
+    margin-left: 30px;
 }
 
 #stocks {
     display: none;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+#stocks, #user-stocks {
+    margin-left: auto;
+    margin-right: auto;
+    width: 800px;
+    font-size: 20px;
+}
+
+.stocks-list li {
+    display: inline-block;
+    height: 30px;
 }
 
 .ticker {
-    width: 60px;
+    width: 70px;
 }
 
 .shares {
-    width: 40px;
+    width: 60px;
     text-align: right;
 }
 
-.newprice {
-    width: 55px;
+.oldprice, .newprice {
+    width: 75px;
     text-align: right;
 }
 
 .pricediff {
-    width: 40px;
+    width: 60px;
     text-align: right;
 }
 
 .increase {
-    width: 50px;
+    width: 60px;
     text-align: right;
 }
 
@@ -60,11 +183,53 @@ img {
     text-align: center;
 }
 
-.newvalue {
-    width: 80px;
+.oldvalue, .newvalue {
+    width: 110px;
     text-align: right;
 }
+.trashcan {
+    width: 25px;
+	padding-left: 10px;
+}
 
-.trash:hover {
-    cursor: pointer;
+.trash-can {
+    width: 25px;
+    height: 25px;
+    background-image: url("../images/trashcan.png");
+    background-size: 100% 100%;
+}
+
+.buy-b {
+    width: 25px;
+    height: 25px;
+    background-image: url("../images/buy.png");
+    background-size: 100% 100%;
+    margin-left: 15px;
+}
+
+.sell-s {
+    width: 25px;
+    height: 25px;
+    background-image: url("../images/sell.png");
+    background-size: 100% 100%;
+    margin-left: 5px;
+}
+
+#lastline {
+    font-weight: bold;
+}
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+#temp-error {
+    margin-left: 30px;
+    color: red;
+    font-size: 15px;
+    margin-top: 15px;
 }
