@@ -42,7 +42,7 @@ function displayStocks(data) {
         else if(totalValue < totalCurrentValue) {
             $('#lastline').children('.stocks-list').children('.newvalue').hasClass('red');
         }
-        $('#user-stocks').append('<div id="' + newdiv + '"> <ul class="stocks-list"> <li class="ticker">' + data.stocks[i].ticker + '</li> <li class="shares">' + userData.stocks[i].shares + '</li> <li class="oldprice">' + oldPrice + '</li> <li class="newprice">' + data.stocks[i].price + '</li> <li class="pricediff">' + priceDiff + '</li> <li class="increase">' + percentIncrease + '%</li> <li class="arrow"> <img src="../images/' + picture + '"> </li> <li class="oldvalue"> $' + oldValue + '</li> <li class="newvalue"> $' + newValue + '</li> <li class="trashcan"> <input title="Click to remove this stock" class="trash-can" type="submit" value=" "> </li> <li class="buy-more-shares"> <input title="Click to buy more shares of this stock" class="buy-b" type="submit" value=" "> </li> <li class="sell-shares"> <input title="Click to sell shares of this stock" class="sell-s" type="submit" value=" "> </li> </ul> </div>');
+        $('#user-stocks').append('<div id="' + newdiv + '"> <ul class="stocks-list"> <li class="ticker">' + data.stocks[i].ticker + '</li> <li class="shares">' + userData.stocks[i].shares + '</li> <li class="oldprice">' + oldPrice + '</li> <li class="newprice">' + data.stocks[i].price + '</li> <li class="pricediff">' + priceDiff + '</li> <li class="increase">' + percentIncrease + '%</li> <li class="arrow"> <img src="../images/' + picture + '"> </li> <li class="oldvalue"> $' + oldValue + '</li> <li class="newvalue"> $' + newValue + '</li> <li class="trashcan"> <input title="Click to sell all shares this stock" class="trash-can" type="submit" value=" "> </li> <li class="buy-more-shares"> <input title="Click to buy more shares of this stock" class="buy-b" type="submit" value=" "> </li> <li class="sell-shares"> <input title="Click to sell shares of this stock" class="sell-s" type="submit" value=" "> </li> </ul> </div>');
     }
     $('#user-stocks').append('<div id="lastline"> <ul class="stocks-list"> <li class="ticker"> Totals </li> <li class="shares"> </li> <li class="oldprice"> </li> <li class="newprice"> </li> <li class="pricediff"> </li> <li class="increase"> </li> <li class="arrow"> </li> <li class="oldvalue"> $' + totalCurrentValue + '</li> <li class="newvalue"> $' + totalValue + '</li> </ul> </div>');
     totalValue = 0;
@@ -103,21 +103,55 @@ $(function() {
         $('#add-stock').hide();
     });
     
+    $('#stock-buy-cancel').click(function() {
+        $('#share-updateup-number').val(' ');
+        $('#stocks').show();
+        $('#user-stocks').show();
+        $('#buy-stocks-screen').hide();
+    });
+    
+    $('#stock-sell-cancel').click(function() {
+        $('#share-updatedown-number').val(' ');
+        $('#stocks').show();
+        $('#user-stocks').show();
+        $('#sell-stocks-screen').hide();
+    });
+    
     $(document).on('click', ".trash-can", function() {
         var stockToDelete = $(this).parent().parent().parent().attr('id');
-        var item = {
-            'stock' : stockToDelete,
-            'user' : user
-        };
-        var ajax = $.ajax('/stocks/remove', {
-            type: 'DELETE',
-            data: JSON.stringify(item),
-            dataType: 'JSON',
-            contentType : 'application/json'
+        $('#stocks').hide();
+        $('#user-stocks').hide();
+        $('#sell-all-shares-confirm-screen').show();
+        $('#stock-to-sell-all-shares').html('<h4>' + stockToDelete + '</h4>');
+        $('#confirm-no').on('click', function() {
+            $('#stocks').show();
+            $('#user-stocks').show();
+            $('#sell-all-shares-confirm-screen').hide();
+            $('#stock-to-sell-all-shares').html('');
+            $('#confirm-no').off();
+            $('#confirm-yes').off();
         });
-        ajax.done(function(res){
-            updatedData = res[0];
-            socket.emit('update', updatedData);
+        $('#confirm-yes').on('click', function() {
+            var item = {
+                'stock' : stockToDelete,
+                'user' : user
+            };
+                var ajax = $.ajax('/stocks/remove', {
+                type: 'DELETE',
+                data: JSON.stringify(item),
+                dataType: 'JSON',
+                contentType : 'application/json'
+            });
+            ajax.done(function(res){
+                updatedData = res[0];
+                socket.emit('update', updatedData);
+                $('#stocks').show();
+                $('#user-stocks').show();
+                $('#sell-all-shares-confirm-screen').hide();
+                $('#stock-to-sell-all-shares').html('');
+                $('#confirm-no').off();
+                $('#confirm-yes').off();
+            });
         });
     });
     
@@ -127,7 +161,7 @@ $(function() {
         $('#user-stocks').hide();
         $('#sell-stocks-screen').show();
         $('#stock-to-sell').html('<h4>' + stockToUpdate +'</h4>');
-        $('#stockupdatedown').click(function() {
+        $('#stockupdatedown').on('click', function() {
             var updateAmount = parseInt($('#share-updatedown-number').val());
             var item = {
                 'stock' : stockToUpdate,
@@ -148,6 +182,7 @@ $(function() {
                 $('#user-stocks').show();
                 $('#stock-to-sell').html('');
                 $('#share-updatedown-number').val('');
+                $('#stockupdatedown').off();
             });
         });
     });
@@ -158,7 +193,7 @@ $(function() {
         $('#user-stocks').hide();
         $('#buy-stocks-screen').show();
         $('#stock-to-buy').html('<h4>' + stockToUpdate +'</h4>');
-        $('#stockupdateup').click(function() {
+        $('#stockupdateup').on('click', function() {
             var updateAmount = parseInt($('#share-updateup-number').val());
             var item = {
                 'stock' : stockToUpdate,
@@ -179,6 +214,7 @@ $(function() {
                 $('#user-stocks').show();
                 $('#stock-to-buy').html('');
                 $('#share-updateup-number').val('');
+                $('#stockupdateup').off();
             });
         });
         

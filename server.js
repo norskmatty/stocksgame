@@ -98,7 +98,7 @@ if (require.main === module) {
     });
 }
 
-// GET, POST, PUT, DELETE
+// DELETE A USER
 
 app.delete('/users/:name', function(req, res) {
     User.findOneAndRemove({username: req.params.name}, function(err, username) {
@@ -122,27 +122,15 @@ app.delete('/users/:name', function(req, res) {
 
 app.get('/users', function(req, res) {
     User.find(function(err, users) {
+        if(err) {
+            res.json(err);
+        }
         return res.status(201).json(users);
     })
     
     console.log('GET users') 
 });
 
-//USER LOGS IN
-
-/** app.get('/hidden', passport.authenticate('basic', {session: false}), function(req, res) {
-    console.log('res.req: ' + res.req);
-    if(res.req.response == 'error') {
-        return res.json(res.req);
-    }
-    else {
-        console.log(res.req.user.username);
-        var sendUser = res.req.user;
-        return res.json(sendUser);
-    }
-    
-});
-**/
 
 //LOCAL STRATEGY USER LOGIN
 
@@ -165,7 +153,7 @@ app.post('/login', passport.authenticate('local'), function(req, res) {
     
 });
 
-
+//GET A LIST OF USERS IN THE CONSOLE
 
 app.get('/users/:username', function(req, res) {
 
@@ -179,6 +167,8 @@ app.get('/users/:username', function(req, res) {
     
         
 });
+
+//CREATE NEW ACCOUNT
 
 app.post('/users', function(req, res) {
     if(!req.body) {
@@ -300,98 +290,99 @@ var getFromApi = function(args) {
     return emitter;
 };
 
-//GET FROM STOCK API
-
-//app.get('/getstock/:exchange/:ticker', function(req, res) {
-//    var query = req.params.exchange + '%3A' + req.params.ticker;
-//    var searchReq = getFromApi(query);
-//    
-//    searchReq.on('end', function(item) {
-//        var stock = item.replace('//', ' ');
-//        stock = stock.trim();
-//        var parsed = JSON.parse(stock);
-//        return res.json(parsed[0]);
-//    });
-//    
-//    searchReq.on('error', function(code) {
-//        res.sendStatus(code);
-//   });
-//});
-
-//ADD STOCK API
+//ADD STOCK
 
 app.put('/stocks/add', function(req, res) {
-    var query = req.body.exchange + '%3A' + req.body.ticker;
-    var searchReq = getFromApi(query);
-    
-    searchReq.on('error', function(item) {
-        return res.json({
-            response: 'error',
-            message: 'Please enter a valid stock ticker for the chosen exchange'
-        });
-    });
-    
-    searchReq.on('end', function(item) {
-        var stock = item.replace('//', ' ');
-        stock = stock.trim();
-        var parsed = JSON.parse(stock);
-        var tempshares = req.body.shares;
-        var currentusername = req.body.user;
-        var tempticker = parsed[0].t;
-        var tempexchange = parsed[0].e;
-        var tempprice = parsed[0].l_fix;
-        var moneyspent = parseFloat(tempprice * tempshares).toFixed(2);
-    
-        User.find(
-            {username: currentusername}, function(err, doc) {
+    User.find(
+        {username: req.body.user}, function(err, doc) {
             if(err) {
                 return res.json(err);
             }
             
-            var moneyHad = parseFloat(doc[0].money);
-            console.log('moneyHad: ' + doc[0].money);
-            var moneyHave = (parseFloat(moneyHad) - parseFloat(moneyspent)).toFixed(2);
-            console.log(moneyHave);
-            if(moneyHave < 0) {
+            for (var i=0; i<doc[0].stocks.length; i++) {
+                if(req.body.ticker == doc[0].stocks[i].ticker) {
+                   return res.json({
+                       response: 'error',
+                       message: 'You already own this stock'
+                   }); 
+                }
+            }
+
+            var query = req.body.exchange + '%3A' + req.body.ticker;
+            var searchReq = getFromApi(query);
+        
+            searchReq.on('error', function(item) {
                 return res.json({
                     response: 'error',
-                    message: 'You do not have enough money to complete this buy'
+                    message: 'Please enter a valid stock ticker for the chosen exchange'
                 });
-            }
-            else {
-                User.update(
-                    {username: currentusername},
-                        {
-                            $push: {
-                                stocks: {
-                                ticker : tempticker,
-                                exchange : tempexchange,
-                                price : tempprice,
-                                shares : tempshares,
-                                moneyspent : moneyspent
-                                }
-                            },
-                            $set: {
-                                money : moneyHave
-                            }
-                }, 
-                function(err, doc) {
-                    if (err) {
-                        return res.json(err);
-                    }
-                
-                    User.find({username: currentusername}, function(err, doc) {
-                        if (err) {
-                            return console.err(err);
+            });
+    
+            searchReq.on('end', function(item) {
+                var stock = item.replace('//', ' ');
+                stock = stock.trim();
+                var parsed = JSON.parse(stock);
+                var tempshares = req.body.shares;
+                var currentusername = req.body.user;
+                var tempticker = parsed[0].t;
+                var tempexchange = parsed[0].e;
+                var tempprice = parsed[0].l_fix;
+                var moneyspent = parseFloat(tempprice * tempshares).toFixed(2);
+    
+                User.find(
+                    {username: currentusername}, function(err, doc) {
+                        if(err) {
+                            return res.json(err);
                         }
-                        return res.json({
-                            response: parsed[0],
-                            money: moneyHave});
-                    });
-                });
-            }
-        });        
-    });        
+            
+                    var moneyHad = parseFloat(doc[0].money);
+                    console.log('moneyHad: ' + doc[0].money);
+                    var moneyHave = (parseFloat(moneyHad) - parseFloat(moneyspent)).toFixed(2);
+                        if(moneyHave < 0) {
+                            return res.json({
+                                response: 'error',
+                                message: 'You do not have enough money to complete this buy'
+                            });
+                        }
+                        else {
+                            User.update(
+                                {username: currentusername},
+                                    {
+                                        $push: {
+                                            stocks: {
+                                                ticker : tempticker,
+                                                exchange : tempexchange,
+                                                price : tempprice,
+                                                shares : tempshares,
+                                                moneyspent : moneyspent
+                                            }
+                                        },
+                                        $set: {
+                                            money : moneyHave
+                                        }
+                                }, 
+                                function(err, doc) {
+                                    if (err) {
+                                        return res.json(err);
+                                    }
+                
+                                    User.find({username: currentusername}, function(err, doc) {
+                                        if (err) {
+                                            return res.json(err);
+                                        }
+                                        return res.json({
+                                            response: parsed[0],
+                                            money: moneyHave
+                                        });
+                                    });
+                                }
+                            );
+                        }
+                    }
+                );
+            });
+        }
+    );
 });        
 
     
@@ -408,30 +399,62 @@ app.get('/logout', function(req, res) {
 
 app.delete('/stocks/remove', function(req, res) {
     var tempStock = req.body.stock;
-    User.update(
-        {username: req.body.user},
-        {
-            $pull: {
-                stocks: {
-                    ticker : tempStock
-                }
-            }
-        },
-        function(err, doc) {
-            if(err) {
-                return console.err(err);
-            }
-            
-            User.find(
-                {username: req.body.user}, function(err, doc) {
-                    if(err) {
-                        return console.err(err);
-                    }
-                    return res.json(doc);
-                });
+    var tempExchange = '';
+    var tempStocks = 0;
+    var tempMoneyHad = 0;
+    User.find({username: req.body.user}, function(err, doc) {
+        if(err) {
+            res.json(err);
         }
+        for (var i=0; i<doc[0].stocks.length; i++) {
+            if(tempStock == doc[0].stocks[i].ticker) {
+                tempExchange = doc[0].stocks[i].exchange;
+                tempStocks = doc[0].stocks[i].shares;
+                tempMoneyHad = doc[0].money;
+            }
+        }
+        var query = tempExchange + '%3A' + tempStock;
+        var searchReq = getFromApi(query);
+    
+        searchReq.on('end', function(item) {
+            var stock = item.replace('//', ' ');
+            stock = stock.trim();
+            var parsed = JSON.parse(stock);
+            var newPrice = parsed[0].l_fix;
+            var tempMoneyGained = parseFloat(newPrice) * parseFloat(tempStocks);
+            var moneyHave = (parseFloat(tempMoneyHad) + parseFloat(tempMoneyGained)).toFixed(2);
+        
+            User.update(
+                {username: req.body.user},
+                    {
+                        $pull: {
+                            stocks: {
+                                ticker : tempStock
+                            }
+                        },
+                        $set: {
+                            money : moneyHave
+                        }
+                    },
+                    function(err, doc) {
+                        if(err) {
+                            return console.err(err);
+                        }
+            
+                        User.find(
+                            {username: req.body.user}, function(err, doc) {
+                                if(err) {
+                                    return console.err(err);
+                                }
+                                return res.json(doc);
+                        });
+                    }
                 
-    );
+                );
+        });
+    });
+    
+    
 });
 
 //SELLING PARTIAL STOCK
@@ -449,7 +472,6 @@ app.put('/stocks/sell', function(req, res) {
                 return console.log(err);
             }
             for (var i=0; i<doc[0].stocks.length;i++) {
-                console.log('the stock is: ' + doc[0].stocks[i].ticker);
                 if(tempStock == doc[0].stocks[i].ticker) {
                     tempExchange = doc[0].stocks[i].exchange;
                     tempStocks = doc[0].stocks[i].shares - tempNumber;
