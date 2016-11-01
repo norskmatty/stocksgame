@@ -22,59 +22,69 @@
         </div>
     </nav>
     <div id="main">
-<!--        <div id="temp">
+        <div id="temp">
             <input type="submit" id="getUsers" value="Console list users">
         </div>
      <div id="temp-del">
             <input id="delete-user" type="text">
             <input type="submit" id="del" value="Delete User">
         </div>
--->     <div id="login"> 
+        <form id="login"> 
             <h2> Welcome back!  Please login below </h2>
             <h3> Username </h3> 
             <input id="username" type="text"> 
             <h3> Password </h3> 
             <input id="password" type="text">
             <div id="submit-username"> <input type="submit" id="accept" value="Login"> </div>
-        </div>
-        <div id="newuser">
+            <div id="temp-error"> </div>
+        </form>
+        <form id="newuser" onsubmit="return false">
             <h2> Create your new account </h2>
             <h3> Username </h3>
             <input id="new-user" type="text">
             <h3> Password </h3>
             <input id="new-pass" type="text">
             <div id="create-user"> <input type="submit" id="signup" value="Create Account"> </div>
-        </div>
+            <div id="temp-error"> </div>
+        </form>
         <div id="add-stock">
-            <h2> Add a new stock to your portfolio </h2>
-            <h3> Exchange: </h3> <select name="exchanges" id="exchanges">
-                <option value="NYSE">NYSE</option>
-                <option value="NASDAQ">NASDAQ</option>
-            </select>
-            <h3> Ticker </h3>
-            <input type="text" id="addstock">
-            <h3> Number of shares </h3>
-            <input type="number" id="number-of-shares" min="1" max="1000">
-            <div id="add-a-stock"> <input type="submit" id="stockadd" value="Add Stock"> </div>
+            <form onsubmit="return false">
+                <h2> Add a new stock to your portfolio </h2>
+                <h3> Exchange: </h3> <select name="exchanges" id="exchanges">
+                    <option value="NYSE">NYSE</option>
+                    <option value="NASDAQ">NASDAQ</option>
+                </select>
+                <h3> Ticker </h3>
+                <input type="text" id="addstock">
+                <h3> Number of shares </h3>
+                <input type="number" id="number-of-shares" min="1" max="1000">
+                <div id="add-a-stock"> <input type="submit" id="stockadd" value="Add Stock"> </div>
+            </form>
             <div id="add-stock-cancel"> <input type="submit" id="stock-add-cancel" value="Cancel"> </div>
+            <div id="temp-add-stock-error"> </div>
         </div>
-        <div id="buy-stocks-screen"> 
-            <h2> Buy additional shares of this stock </h2>
-            <div id="stock-to-buy"> 
-            </div>
-            <h3> Shares to buy </h3>
-            <input type="number" id="share-updateup-number" min="1" max="1000">
-            <div> <input type="submit" id="stockupdateup" value="Buy Stock"> </div>
+        <div id="buy-stocks-screen">
+            <form onsubmit="return false"> 
+                <h2> Buy additional shares of this stock </h2>
+                <div id="stock-to-buy"> </div>
+                <h3> Shares to buy </h3>
+                <input type="number" id="share-updateup-number" min="1" max="1000">
+                <div> <input type="submit" id="stockupdateup" value="Buy Stock"> </div>
+            </form>
             <div id="buy-stock-cancel"> <input type="submit" id="stock-buy-cancel" value="Cancel"> </div>
+            <div id="temp-buy-stock-error"> </div>
         </div>
         <div id="sell-stocks-screen">
-            <h2> Sell a partial amount of shares of this stock </h2>
-            <div id="stock-to-sell">
-            </div>
-            <h3> Shares to sell </h3>
-            <input type="number" id="share-updatedown-number" min="1" max="1000">
-            <div> <input type="submit" id="stockupdatedown" value="Sell Stock"> </div>
+            <form onsubmit="return false">
+                <h2> Sell a partial amount of shares of this stock </h2>
+                <div id="stock-to-sell">
+                </div>
+                <h3> Shares to sell </h3>
+                <input type="number" id="share-updatedown-number" min="1" max="1000">
+                <div> <input type="submit" id="stockupdatedown" value="Sell Stock"> </div>
+            </form>
             <div id="sell-stock-cancel"> <input type="submit" id="stock-sell-cancel" value="Cancel"> </div>
+            <div id="temp-sell-stock-error"> </div>
         </div>
         <div id="sell-all-shares-confirm-screen">
             <h2> Are you sure you wish to sell all shares of this stock? </h2>

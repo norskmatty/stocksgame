@@ -231,9 +231,13 @@ select {
     color: green;
 }
 
-#temp-error {
+#temp-error, #temp-stock-buy-error, #temp-stock-sell-error, #temp-add-stock-error {
     margin-left: 30px;
     color: red;
     font-size: 15px;
     margin-top: 15px;
+}
+
+.totals {
+    width: 150px;
 }

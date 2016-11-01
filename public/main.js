@@ -6,6 +6,7 @@ var tempTotalValue = 0;
 var totalCurrentValue = 0;
 var tempTotalCurrentValue = 0;
 var noStocks = false;
+/*global $*/
 
 function getStockUpdate(callback) {
     setTimeout(function() {callback(updatedData)}, 100);
@@ -28,6 +29,8 @@ function displayStocks(data) {
         tempTotalValue += parseFloat(newValue);
         totalValue = tempTotalValue.toFixed(2);
         console.log("totalValue: " + totalValue);
+        var totalGainorLoss = (parseFloat(totalValue) - parseFloat(totalCurrentValue)).toFixed(2);
+        var percentTotalGainorLoss = ((parseFloat(totalGainorLoss) / parseFloat(totalCurrentValue)) * 100).toFixed(2);
         var picture = "";
         var theColor = "";
         if (priceDiff >= 0 ) {
@@ -45,6 +48,7 @@ function displayStocks(data) {
         $('#user-stocks').append('<div id="' + newdiv + '"> <ul class="stocks-list"> <li class="ticker">' + data.stocks[i].ticker + '</li> <li class="shares">' + userData.stocks[i].shares + '</li> <li class="oldprice">' + oldPrice + '</li> <li class="newprice">' + data.stocks[i].price + '</li> <li class="pricediff">' + priceDiff + '</li> <li class="increase">' + percentIncrease + '%</li> <li class="arrow"> <img src="../images/' + picture + '"> </li> <li class="oldvalue"> $' + oldValue + '</li> <li class="newvalue"> $' + newValue + '</li> <li class="trashcan"> <input title="Click to sell all shares this stock" class="trash-can" type="submit" value=" "> </li> <li class="buy-more-shares"> <input title="Click to buy more shares of this stock" class="buy-b" type="submit" value=" "> </li> <li class="sell-shares"> <input title="Click to sell shares of this stock" class="sell-s" type="submit" value=" "> </li> </ul> </div>');
     }
     $('#user-stocks').append('<div id="lastline"> <ul class="stocks-list"> <li class="ticker"> Totals </li> <li class="shares"> </li> <li class="oldprice"> </li> <li class="newprice"> </li> <li class="pricediff"> </li> <li class="increase"> </li> <li class="arrow"> </li> <li class="oldvalue"> $' + totalCurrentValue + '</li> <li class="newvalue"> $' + totalValue + '</li> </ul> </div>');
+    $('#user-stocks').append('<div id="total-gain"> <ul class="stocks-list"> <li class="totals"> Total Gain / Loss: </li> <li class="shares"> </li> <li class-"oldprice">$' + totalGainorLoss + '</li> <li class="pricediff"> </li> <li class="increase">' + percentTotalGainorLoss + '%</li> </ul> </div)')
     totalValue = 0;
     tempTotalValue = 0;
     totalCurrentValue = 0;
@@ -88,36 +92,88 @@ $(function() {
             window.location.reload(true);
         });
     });
-    
+
+// Front end screen for adding a new stock, entering the ticker and number of shares, and allowing the user to cancel back to the main screen    
     $('#click-to-add-stock').click(function() {
+        $('#temp-add-stock-error').hide();
         $('#stocks').hide();
         $('#user-stocks').hide();
         $('#add-stock').show();
+        $('#stockadd').click(function(event) {
+            event.preventDefault();
+            $('#temp-add-stock-error').hide();
+            var exchange = $('#exchanges').val();
+            var ticker = $('#addstock').val();
+            var shares = parseInt($('#number-of-shares').val());
+            if(ticker == '') {
+                $('#temp-add-stock-error').show();
+                $('#temp-add-stock-error').html('Please enter a stock ticker');
+                return;
+            }
+            else if(shares <= 0 || isNaN(shares)) {
+                $('#temp-add-stock-error').show();
+                $('#temp-add-stock-error').html('Please enter a valid number of shares');
+                return;
+            }
+            var item = {
+                'exchange' : exchange,
+                'ticker' : ticker,
+                'shares' : shares
+            };
+            var ajax = $.ajax('/stocks/add', {
+                type: 'PUT',
+                data: JSON.stringify(item),
+                datatype: 'JSON',
+                contentType: 'application/json'
+            });
+            ajax.done(function(res){
+                console.log(res);
+                if(res.response == "error") {
+                    $('#temp-add-stock-error').show();
+                    $('#temp-add-stock-error').html(res.message);
+                    return;
+                }
+                else {
+                    var tempMoney = shares * res.response.l_fix;
+                    var temp = {
+                        exchange : res.response.e,
+                        ticker : res.response.t,
+                        price : res.response.l_fix,
+                        shares : shares,
+                        moneyspent: tempMoney
+                    };
+                    console.log(temp);
+                    if (noStocks == true) {
+                        var i = 0;
+                    }
+                    else {
+                        var i = userData.stocks.length;
+                    }
+                    userData.stocks[i] = temp;
+                    userData.money = res.money;
+                    updatedData.stocks[i] = temp;
+                    getAndDisplayStocks();
+                    noStocks = false;
+                    $('#add-stock').hide();
+                    $('#stocks').show();
+                    $('#user-stocks').show();
+                    $('#temp-add-stock-error').hide();
+                }
+            });
+        });
+        $('#stock-add-cancel').click(function() {
+            $('#addstock').val('');
+            $('#number-of-shares').val('');
+            $('#stocks').show();
+            $('#user-stocks').show();
+            $('#add-stock').hide();
+            $('#stockadd').off();
+        });
     });
     
-    $('#stock-add-cancel').click(function() {
-        $('#addstock').val('');
-        $('#number-of-shares').val('');
-        $('#stocks').show();
-        $('#user-stocks').show();
-        $('#add-stock').hide();
-    });
     
-    $('#stock-buy-cancel').click(function() {
-        $('#share-updateup-number').val(' ');
-        $('#stocks').show();
-        $('#user-stocks').show();
-        $('#buy-stocks-screen').hide();
-    });
-    
-    $('#stock-sell-cancel').click(function() {
-        $('#share-updatedown-number').val(' ');
-        $('#stocks').show();
-        $('#user-stocks').show();
-        $('#sell-stocks-screen').hide();
-    });
-    
-    $(document).on('click', ".trash-can", function() {
+    $(document).on('click', ".trash-can", function(event) {
+        event.preventDefault();
         var stockToDelete = $(this).parent().parent().parent().attr('id');
         $('#stocks').hide();
         $('#user-stocks').hide();
@@ -133,8 +189,7 @@ $(function() {
         });
         $('#confirm-yes').on('click', function() {
             var item = {
-                'stock' : stockToDelete,
-                'user' : user
+                'stock' : stockToDelete
             };
                 var ajax = $.ajax('/stocks/remove', {
                 type: 'DELETE',
@@ -155,7 +210,9 @@ $(function() {
         });
     });
     
-    $(document).on('click', ".sell-s", function() {
+    $(document).on('click', ".sell-s", function(event) {
+        event.preventDefault();
+        $('#temp-sell-stock-error').hide();
         var stockToUpdate = $(this).parent().parent().parent().attr('id');
         $('#stocks').hide();
         $('#user-stocks').hide();
@@ -163,10 +220,14 @@ $(function() {
         $('#stock-to-sell').html('<h4>' + stockToUpdate +'</h4>');
         $('#stockupdatedown').on('click', function() {
             var updateAmount = parseInt($('#share-updatedown-number').val());
+            if(updateAmount <= 0 || isNaN(updateAmount)) {
+                $('#temp-sell-stock-error').show();
+                $('#temp-sell-stock-error').html('Please enter a valid amount');
+                return;
+            }
             var item = {
                 'stock' : stockToUpdate,
-                'updateAmount' : updateAmount,
-                'user' : user
+                'updateAmount' : updateAmount
             };
             var ajax = $.ajax('/stocks/sell', {
                 type: 'PUT',
@@ -175,19 +236,34 @@ $(function() {
                 contentType: 'application/json'
             });
             ajax.done(function(res) {
-                updatedData = res[0];
-                socket.emit('update', updatedData);
-                $('#sell-stocks-screen').hide();
-                $('#stocks').show();
-                $('#user-stocks').show();
-                $('#stock-to-sell').html('');
-                $('#share-updatedown-number').val('');
-                $('#stockupdatedown').off();
+                console.log(res);
+                if(res.response == 'error') {
+                    $('#temp-sell-stock-error').show();
+                    $('#temp-sell-stock-error').html(res.message);
+                    return;
+                }
+                else {
+                    updatedData = res[0];
+                    socket.emit('update', updatedData);
+                    $('#sell-stocks-screen').hide();
+                    $('#stocks').show();
+                    $('#user-stocks').show();
+                    $('#stock-to-sell').html('');
+                    $('#share-updatedown-number').val('');
+                }
             });
+        });
+        $('#stock-sell-cancel').click(function() {
+            $('#share-updatedown-number').val(' ');
+            $('#stocks').show();
+            $('#user-stocks').show();
+            $('#sell-stocks-screen').hide();
         });
     });
     
-    $(document).on('click', ".buy-b", function() {
+    $(document).on('click', ".buy-b", function(event) {
+        event.preventDefault();
+        $('#temp-buy-stock-error').hide();
         var stockToUpdate = $(this).parent().parent().parent().attr('id');
         $('#stocks').hide();
         $('#user-stocks').hide();
@@ -195,10 +271,14 @@ $(function() {
         $('#stock-to-buy').html('<h4>' + stockToUpdate +'</h4>');
         $('#stockupdateup').on('click', function() {
             var updateAmount = parseInt($('#share-updateup-number').val());
+            if(updateAmount <= 0 || isNaN(updateAmount)){
+                $('#temp-buy-stock-error').show();
+                $('#temp-buy-stock-error').html('Please enter a valid number of shares');
+                return;
+            }
             var item = {
                 'stock' : stockToUpdate,
-                'updateAmount' : updateAmount,
-                'user' : user
+                'updateAmount' : updateAmount
             };
             var ajax = $.ajax('/stocks/buy', {
                 type: 'PUT',
@@ -207,17 +287,29 @@ $(function() {
                 contentType: 'application/json'
             });
             ajax.done(function(res) {
-                updatedData = res[0];
-                socket.emit('update', updatedData);
-                $('#buy-stocks-screen').hide();
-                $('#stocks').show();
-                $('#user-stocks').show();
-                $('#stock-to-buy').html('');
-                $('#share-updateup-number').val('');
-                $('#stockupdateup').off();
+                if(res.response == 'error') {
+                    $('#temp-buy-stock-error').show();
+                    $('#temp-buy-stock-error').html(res.message);
+                    return;
+                }
+                else {
+                    updatedData = res[0];
+                    socket.emit('update', updatedData);
+                    $('#buy-stocks-screen').hide();
+                    $('#stocks').show();
+                    $('#user-stocks').show();
+                    $('#stock-to-buy').html('');
+                    $('#share-updateup-number').val('');
+                }
             });
         });
-        
+        $('#stock-buy-cancel').click(function() {
+            $('#share-updateup-number').val(' ');
+            $('#stocks').show();
+            $('#user-stocks').show();
+            $('#buy-stocks-screen').hide();
+            $('#temp-buy-stock-error').hide();
+        });
     });
     
     var socket = io();
@@ -244,67 +336,11 @@ $(function() {
             console.log(res.Message);
         });
     });
-    
-    $('#stockadd').click(function() {
-        $('#temp-error').hide();
-        var exchange = $('#exchanges').val();
-        var ticker = $('#addstock').val();
-        var shares = parseInt($('#number-of-shares').val());
-        if(ticker == '') {
-            $('#add-stock').append('<div id="temp-error"> Please enter a stock ticker </div>');
-            return;
-        }
-        else if(shares <= 0 || isNaN(shares)) {
-            $('#add-stock').append('<div id="temp-error"> Please enter a valid number of shares </div>');
-            return;
-        }
-        var item = {
-            'exchange' : exchange,
-            'ticker' : ticker,
-            'user' : user,
-            'shares' : shares
-        };
-        var ajax = $.ajax('/stocks/add', {
-            type: 'PUT',
-            data: JSON.stringify(item),
-            datatype: 'JSON',
-            contentType: 'application/json'
-        });
-        ajax.done(function(res){
-            console.log(res);
-            if(res.response == "error") {
-                $('#add-stock').append('<div id="temp-error">' + res.message + '</div>')
-            }
-            else {
-                var tempMoney = shares * res.response.l_fix;
-                var temp = {
-                    exchange : res.response.e,
-                    ticker : res.response.t,
-                    price : res.response.l_fix,
-                    shares : shares,
-                    moneyspent: tempMoney
-                };
-                console.log(temp);
-                if (noStocks == true) {
-                    var i = 0;
-                }
-                else {
-                    var i = userData.stocks.length;
-                }
-                userData.stocks[i] = temp;
-                userData.money = res.money;
-                updatedData.stocks[i] = temp;
-                getAndDisplayStocks();
-                noStocks = false;
-                $('#add-stock').hide();
-                $('#stocks').show();
-                $('#user-stocks').show();
-            }
-        });
-    });
 
     
-    $('#accept').click(function() {
+    $('#accept').click(function(event) {
+        event.preventDefault();
+        $('#temp-error').hide();
         var existingUsername = $('#username').val();
         var existingPassword = $('#password').val();
         var item = {'username' : existingUsername, 'password' : existingPassword};
@@ -316,23 +352,28 @@ $(function() {
             contentType: 'application/json'
         });
         ajax.done(function(res) {
-            userData = res;
-            updatedData = res;
-            user = userData.username;
-            console.log("user " + user + " logged in!");
-            getAndDisplayStocks();
+            if(res.response == 'error') {
+                $('#login').append('<div id="temp-error">' + res.message + '</div>');
+                return;
+            }
+            else {
+                userData = res;
+                updatedData = res;
+                user = userData.username;
+                console.log("user " + user + " logged in!");
+                getAndDisplayStocks();
+                $('#login').hide();
+                $('#stocks').show();
+                $('#nav-open').hide();
+                $('#nav-logged-in').show();
+                $('#total-money').show();
+                $('#total-money').html('Cash: $<span id="insert-money"> ' + userData.money + '</span>');
+            }
         });
-        
-        
-        $('#login').hide();
-        $('#stocks').show();
-        $('#nav-open').hide();
-        $('#nav-logged-in').show();
-        $('#total-money').show();
-        $('#total-money').html('Cash: $<span id="insert-money"> ' + userData.money + '</span>');
     });
     
-    $('#signup').click(function() {
+    $('#signup').click(function(event) {
+        event.preventDefault();
         $('#temp-error').hide();
         var newUsername = $('#new-user').val();
         var newPassword = $('#new-pass').val();
