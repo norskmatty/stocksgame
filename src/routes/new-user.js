@@ -1,6 +1,6 @@
 module.exports = function(app, passport, User, bcrypt) {
 
-    app.post('/users', function(req, res) {
+    app.post('/new-user', function(req, res) {
     if(!req.body) {
         return res.status(400).json({
             response: 'error',
@@ -9,17 +9,16 @@ module.exports = function(app, passport, User, bcrypt) {
     }
     
     if(!('username' in req.body)) {
-        return res.status(422).json({
+        return res.status(200).json({
             response: 'error',
             message: "Username missing"
         });
     }
     
     var username = req.body.username;
-    console.log(username);
     
     if (typeof username !== 'string') {
-        return res.status(422).json({
+        return res.status(200).json({
             response: 'error',
             message: 'Incorrect username field type'
         });
@@ -28,7 +27,7 @@ module.exports = function(app, passport, User, bcrypt) {
     username = username.trim();
     
     if (username === '') {
-        return res.status(422).json({
+        return res.status(200).json({
             response: 'error',
             message: 'Incorrect field length: username'
         });
@@ -47,17 +46,16 @@ module.exports = function(app, passport, User, bcrypt) {
         else {
             
             if (!('password' in req.body)) {
-                return res.status(422).json({
+                return res.status(200).json({
                     response: 'error',
                     message: 'Password missing'
                 });
             }
     
             var password = req.body.password;
-            console.log(password);
     
             if(typeof password !== 'string') {
-                return res.status(422).json({
+                return res.status(200).json({
                     response: 'error',
                     message: 'Incorrect password field type'
                 });
@@ -66,7 +64,8 @@ module.exports = function(app, passport, User, bcrypt) {
             password = password.trim();
     
             if(password === '') {
-                return res.status(422).json ({
+                return res.status(200).json ({
+                    response: 'error',
                     message: 'Incorrect field length: password'
                 });
             }
@@ -101,7 +100,6 @@ module.exports = function(app, passport, User, bcrypt) {
                                     message: 'Internal Server Error'
                                 });
                             }
-                            console.log(user);
                             return res.status(201).json(user);
                         });
                         

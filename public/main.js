@@ -171,7 +171,8 @@ $(function() {
         });
     });
     
-    
+//Sell all shares of a single stock
+
     $(document).on('click', ".trash-can", function(event) {
         event.preventDefault();
         var stockToDelete = $(this).parent().parent().parent().attr('id');
@@ -210,6 +211,8 @@ $(function() {
         });
     });
     
+//Sell partial shares of a stock
+
     $(document).on('click', ".sell-s", function(event) {
         event.preventDefault();
         $('#temp-sell-stock-error').hide();
@@ -260,6 +263,8 @@ $(function() {
             $('#sell-stocks-screen').hide();
         });
     });
+    
+//Buy additional shares of an already owned stock
     
     $(document).on('click', ".buy-b", function(event) {
         event.preventDefault();
@@ -337,7 +342,8 @@ $(function() {
         });
     });
 
-    
+//Login an already existing user
+
     $('#accept').click(function(event) {
         event.preventDefault();
         $('#temp-error').hide();
@@ -371,17 +377,17 @@ $(function() {
             }
         });
     });
+
+//Create a new user
     
     $('#signup').click(function(event) {
         event.preventDefault();
         $('#temp-error').hide();
         var newUsername = $('#new-user').val();
         var newPassword = $('#new-pass').val();
-        console.log(newUsername);
-        console.log(newPassword);
         var item = {'username' : newUsername, 'password' : newPassword};
         
-        var ajax = $.ajax('/users', {
+        var ajax = $.ajax('/new-user', {
             type: 'POST',
             data: JSON.stringify(item),
             dataType: 'json',
@@ -398,8 +404,6 @@ $(function() {
                 user = res.username;
                 userData = res;
                 updatedData = res;
-                console.log (userData);
-                console.log(user);
             
                 $('#newuser').hide();
                 $('#stocks').show();
@@ -412,6 +416,8 @@ $(function() {
         
 
     });
+
+//get an update on stocks
     
     $('#update-stocks').click(function() {
         socket.emit('update', updatedData);
@@ -424,17 +430,6 @@ $(function() {
         updatedData.stocks = updatedStockdata;
         getAndDisplayStocks();
     });
-    
-    
-    $('#get2').click(function() {
-        socket.emit('userData', userData);
-    });
-    
-
-    
-
-    
-
 });
 
 

@@ -15,12 +15,13 @@ module.exports = function(app, passport) {
             });
         }
         
-        if(req.response == "error") {
+        if(!(req.user)) {
+            console.log(req);
             return res.json(req);
         }
         else {
-            console.log('/login', req.session);
-            console.log('req.session.passport.user', req.session.passport.user);
+//            console.log('/login', req.session);
+//            console.log('req.session.passport.user', req.session.passport.user);
             var sendUser = req.user;
             return res.json(sendUser);
         }

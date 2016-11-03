@@ -13,7 +13,7 @@ module.exports = new LocalStrategy(function(username, password, callback) {
         if(!user) {
             return callback(null, false, {
                 response: 'error',
-                message: 'Incorrect username.'  
+                message: 'Incorrect username'  
             });
         }
     

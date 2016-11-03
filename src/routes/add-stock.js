@@ -14,7 +14,6 @@ module.exports = function(app, User, events, unirest) {
         };
     
     app.put('/stocks/add', function(req, res) {
-    console.log(req.session);
     User.find(
         {_id: req.session.passport.user}, function(err, doc) {
             if(err) {
