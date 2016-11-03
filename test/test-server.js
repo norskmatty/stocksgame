@@ -17,7 +17,6 @@ describe ('Front Page', function() {
     before(function(done) {
         server.runServer(function() {
             User.create({
-                _id: '12345',
                 username: 'test',
                 password: '$2a$10$/eFyhAfsxWOji9HGrNrkL.jN6HoupBUF3myPpJnPPq4LM6j926WUu',
                 money: '90000.00',
@@ -36,7 +35,8 @@ describe ('Front Page', function() {
                     }
                 ]
             },
-            function() {
+            function(err, result) {
+                // ---> console.log(err, result)
                 done();
             });
         });
@@ -120,7 +120,7 @@ describe ('Front Page', function() {
         });
     });
     
-        it('should not create a new user with no password', function(done) {
+    it('should not create a new user with no password', function(done) {
         chai.request(app)
         .post('/new-user')
         .send({
