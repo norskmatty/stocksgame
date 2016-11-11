@@ -1,4 +1,7 @@
 module.exports = function(app, User, events, unirest) {
+
+"use strict";
+    
     var getFromApi = function(args) {   
     var emitter = new events.EventEmitter();
         unirest.get('http://finance.google.com/finance/info?client=ig&q=' + args)
@@ -13,22 +16,23 @@ module.exports = function(app, User, events, unirest) {
             return emitter;
     };
     
-    app.delete('/stocks/remove', function(req, res) {
-    var tempStock = req.body.stock;
-    var tempExchange = '';
-    var tempStocks = 0;
-    var tempMoneyHad = 0;
+    app.delete('/stocks/', function(req, res) {
+    const tempStock = req.body.stock;
+    let tempExchange = '';
+    let tempStocks = 0;
+    let tempMoneyHad = 0;
     User.find({_id: req.session.passport.user}, function(err, doc) {
         if(err) {
             res.json(err);
         }
-        for (var i=0; i<doc[0].stocks.length; i++) {
-            if(tempStock == doc[0].stocks[i].ticker) {
-                tempExchange = doc[0].stocks[i].exchange;
-                tempStocks = doc[0].stocks[i].shares;
+        doc[0].stocks.forEach ((item) => {
+           if(tempStock == item.ticker) {
+                tempExchange = item.exchange;
+                tempStocks = item.shares;
                 tempMoneyHad = doc[0].money;
-            }
-        }
+           }
+        });
+
         var query = tempExchange + '%3A' + tempStock;
         var searchReq = getFromApi(query);
     
@@ -36,9 +40,9 @@ module.exports = function(app, User, events, unirest) {
             var stock = item.replace('//', ' ');
             stock = stock.trim();
             var parsed = JSON.parse(stock);
-            var newPrice = parsed[0].l_fix;
-            var tempMoneyGained = parseFloat(newPrice) * parseFloat(tempStocks);
-            var moneyHave = (parseFloat(tempMoneyHad) + parseFloat(tempMoneyGained)).toFixed(2);
+            const newPrice = parsed[0].l_fix;
+            const tempMoneyGained = parseFloat(newPrice) * parseFloat(tempStocks);
+            const moneyHave = (parseFloat(tempMoneyHad) + parseFloat(tempMoneyGained)).toFixed(2);
         
             User.update(
                 {_id: req.session.passport.user},

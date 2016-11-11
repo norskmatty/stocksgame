@@ -1,52 +1,54 @@
-module.exports = function(app, passport, User, bcrypt) {
+module.exports = function (app, passport, User, bcrypt) {
 
-    app.post('/new-user', function(req, res) {
-    if(!req.body) {
-        return res.status(400).json({
+    app.post ('/new-user', function (req, res) {
+    if (! req.body) {
+        return res.status(400).json ({
             response: 'error',
-            message: "no request"
+            message: 'no request'
         });
     }
     
-    if(!('username' in req.body)) {
-        return res.status(200).json({
+    if( ! ('username' in req.body)) {
+        return res.status(200).json ({
             response: 'error',
-            message: "Username missing"
+            message: 'Username missing'
         });
     }
     
     var username = req.body.username;
     
     if (typeof username !== 'string') {
-        return res.status(200).json({
+        return res.status(200).json ({
             response: 'error',
             message: 'Incorrect username field type'
         });
     }
     
-    username = username.trim();
+    username = username.trim ();
     
     if (username === '') {
-        return res.status(200).json({
+        return res.status(200).json ({
             response: 'error',
             message: 'Incorrect field length: username'
         });
     }
     
-    User.find({username: username}, function(err, doc) {
-        if(err) {
-            return console.err(err);
+    User.find ({
+        username: username
+    }, function (err, doc) {
+        if (err) {
+            return console.err (err);
         }
-        if(doc.length > 0) {
+        if (doc.length > 0) {
             return res.json({
-            response: 'error',
-            message: 'Username already exists'
+                response: 'error',
+                message: 'Username already exists'
             });
         }
         else {
             
-            if (!('password' in req.body)) {
-                return res.status(200).json({
+            if ( ! ('password' in req.body)) {
+                return res.status(200).json ({
                     response: 'error',
                     message: 'Password missing'
                 });
@@ -54,8 +56,8 @@ module.exports = function(app, passport, User, bcrypt) {
     
             var password = req.body.password;
     
-            if(typeof password !== 'string') {
-                return res.status(200).json({
+            if (typeof password !== 'string') {
+                return res.status(200).json ({
                     response: 'error',
                     message: 'Incorrect password field type'
                 });
@@ -70,16 +72,16 @@ module.exports = function(app, passport, User, bcrypt) {
                 });
             }
     
-            bcrypt.genSalt(10, function(err, salt) {
+            bcrypt.genSalt (10, function (err, salt) {
                 if (err) {
-                    return res.status(500).json({
+                    return res.status(500).json ({
                         message: 'Internal server error'
                     });
                 }
         
-                bcrypt.hash(password, salt, function(err, hash) {
-                    if(err) {
-                        return res.status(500).json({
+                bcrypt.hash (password, salt, function (err, hash) {
+                    if (err) {
+                        return res.status(500).json ({
                             message: 'Internal server error'
                         });
                 }
@@ -88,19 +90,19 @@ module.exports = function(app, passport, User, bcrypt) {
                     username : username,
                     password : hash,
                     money : 100000.00
-                    }, function(err, user) {
+                    }, function (err, user) {
                         if (err) {
-                            return res.status(500).json({
+                            return res.status(500).json ({
                                 message: 'Internal Server Error'
                             });
                         }
-                        req.login(user, function(err) {
-                            if(err) {
-                                return res.status(500).json({
+                        req.login (user, function (err) {
+                            if (err) {
+                                return res.status(500).json ({
                                     message: 'Internal Server Error'
                                 });
                             }
-                            return res.status(201).json(user);
+                            return res.status(201).json (user);
                         });
                         
                         });

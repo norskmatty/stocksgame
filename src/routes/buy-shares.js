@@ -1,4 +1,7 @@
 module.exports = function(app, User, events, unirest) {
+    
+"use strict";
+    
     var getFromApi = function(args) {   
         var emitter = new events.EventEmitter();
         unirest.get('http://finance.google.com/finance/info?client=ig&q=' + args)
@@ -28,29 +31,29 @@ module.exports = function(app, User, events, unirest) {
         });
     }
     
-    var tempStock = req.body.stock;
-    var tempNumber = req.body.updateAmount;
-    var tempStocks = 0;
-    var tempMoneySpent = 0;
-    var tempprice = 0;
-    var originalMoneySpent = 0;
-    var tempNewMoneySpent = 0;
-    var newCostAveragedPrice = 0;
-    var newMoney = 0;
+    const tempStock = req.body.stock;
+    const tempNumber = req.body.updateAmount;
+    let tempStocks = 0;
+    let tempMoneySpent = 0;
+    let tempprice = 0;
+    let originalMoneySpent = 0;
+    let tempNewMoneySpent = 0;
+    let newCostAveragedPrice = 0;
+    let newMoney = 0;
     
     User.find(
         {_id: req.session.passport.user}, function(err, doc) {
             if(err) {
                 return console.log(err);
             }
-            for (var i=0; i<doc[0].stocks.length;i++) {
-                if(tempStock == doc[0].stocks[i].ticker) {
-                    tempStocks = parseInt(doc[0].stocks[i].shares) + parseInt(tempNumber);
+            doc[0].stocks.forEach((item) => {
+                if(tempStock == item.ticker) {
+                    tempStocks = parseInt(item.shares) + parseInt(tempNumber);
                     if(tempStocks < 1) {
                         return console.err(err);
                     }
-                    var query = doc[0].stocks[i].exchange + '%3A' + tempStock;
-                    originalMoneySpent = parseFloat(doc[0].stocks[i].moneyspent);
+                    var query = item.exchange + '%3A' + tempStock;
+                    originalMoneySpent = parseFloat(item.moneyspent);
                     var searchReq = getFromApi(query);
     
                     searchReq.on('end', function(item) {
@@ -62,7 +65,6 @@ module.exports = function(app, User, events, unirest) {
                         tempMoneySpent = (parseFloat(originalMoneySpent) + parseFloat(tempNewMoneySpent)).toFixed(2);
                         newCostAveragedPrice = (parseFloat(tempMoneySpent) / parseFloat(tempStocks)).toFixed(2);
                         newMoney = (parseFloat(doc[0].money) - parseFloat(tempNewMoneySpent)).toFixed(2);
-                        console.log('newMoney on buy: ' + newMoney);
                         if(newMoney < 0) {
                             return res.json ({
                                 response: 'error',
@@ -98,8 +100,8 @@ module.exports = function(app, User, events, unirest) {
                             );
                         });
                     }
-                }
-            }    
+                });
+            }        
         );
     });
 };
