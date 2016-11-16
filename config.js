@@ -1,2 +1,2 @@
-exports.DATABASE_URL = process.env.DATABASE_URL || global.DATABASE_URL || (process.env.NODE_ENV === 'production' ?  'mongodb://localhost/stocks' : 'mongodb://localhost/stocks-dev');
+exports.DATABASE_URL = process.env.DATABASE_URL || global.DATABASE_URL || (process.env.NODE_ENV === 'production' ?  'mongodb://localhost/stocks' : 'mongodb://mlconley:q1q2q3q4@ds151927.mlab.com:51927/heroku_4b97q3b3');
 exports.PORT = process.env.PORT || 8080;
