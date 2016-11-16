@@ -160,6 +160,7 @@ $(function () {
                     $('#stocks').show();
                     $('#user-stocks').show();
                     $('#temp-add-stock-error').hide();
+                    $('#stockadd').off();
                 }
             });
         });
