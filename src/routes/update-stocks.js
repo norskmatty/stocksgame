@@ -19,9 +19,9 @@ module.exports = function (socket, app, User, events, unirest) {
         
         let stocksQuery = sentData.stocks[0].ticker;
         
-        sentData.stocks((item) => {
-            stocksQuery += ',' + item.ticker;
-        });
+        for (var i = 1; i<sentData.stocks.length; i++) {
+            stocksQuery += ',' + sentData.stocks[i].ticker;
+        }
         
         var searchReq = getFromApi (stocksQuery);
         

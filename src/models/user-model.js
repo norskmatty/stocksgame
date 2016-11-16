@@ -1,15 +1,5 @@
 var mongoose = require('mongoose');
 
-var mongodbUri = 'heroku_4b97q3b3:545gsgbdm0ud92evb3btcq7015@ds151927.mlab.com:51927/heroku_4b97q3b3/db';
-
-mongoose.connect(mongodbUri);
-
-var db = mongoose.connection;
-
-db.on('error', console.error.bind(console, 'connection error:'));
-
-db.once('open', function callback () {
-
 var UserSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -46,5 +36,3 @@ UserSchema.methods.validatePassword = function(password, callback) {
 var User = mongoose.model('User', UserSchema);
 
 module.exports = User;
-
-});
